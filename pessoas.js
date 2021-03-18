@@ -2,7 +2,7 @@
     buscarPessoas().then(json => {
         window.dados = json
         listarPessoas();
-    }).catch(error => errorLoading(error));
+    }).catch(error => erroCarregamento(error));
 })();
 
 // Busca de pessoas através do link
@@ -73,34 +73,44 @@ function listarPessoas() {
     }
 
     if (json.previous != null) {
-        const anterior = document.getElementById("anterior");
-
-        anterior.classList.remove("js-escondido");
-        anterior.firstElementChild.dataset.page = new URL(json.previous).searchParams.get("page");
+        removeNavegacao("anterior", json);
     }
 
     if (json.next != null) {
-        const proximo = document.getElementById("proximo");
-
-        proximo.classList.remove("js-escondido");
-        proximo.firstElementChild.dataset.page = new URL(json.next).searchParams.get("page");
+        removeNavegacao("proximo", json);
     }
 
     document.getElementById("loader").classList.add("js-escondido");
 }
 
-// Acesso a página
-async function accessPage(element) {
-    removeAll();
+// Altera o elemento próxima ou anterior
+function removeNavegacao(sentido, json){
+    const botao = document.getElementById(sentido);
 
-    buscarPessoas("http://swapi.dev/api/people/?page=" + element.dataset.page).then(json => {
+    botao.classList.remove("js-escondido");
+
+    if (sentido == "proximo"){
+        botao.firstElementChild.dataset.page = new URL(json.next).searchParams.get("page");
+    }
+
+    if (sentido == "anterior"){
+        botao.firstElementChild.dataset.page = new URL(json.previous).searchParams.get("page");
+    }
+}
+
+
+// Acesso a página
+async function accessarPagina(elemento) {
+    apagarTudo();
+
+    buscarPessoas("http://swapi.dev/api/people/?page=" + elemento.dataset.page).then(json => {
             window.dados = json
             listarPessoas();
-        }).catch(error => errorLoading(error));
+        }).catch(error => erroCarregamento(error));
 }
 
 // Mensagem de erro no carregamento
-async function errorLoading(error) {
+async function erroCarregamento(error) {
 
     erroElemento =  document.getElementById("loader").childNodes[0];
     
@@ -123,8 +133,8 @@ function novoElemento(elem, type, newClass = null, newID = null) {
     }
 }
 
-// Remover todos os pessoas listados
-function removeAll() {
+// Remover todos as pessoas listados e reinicia a página
+function apagarTudo() {
     const node = document.getElementById("pessoasLista");
 
     while (node.lastElementChild) {
@@ -136,7 +146,7 @@ function removeAll() {
     document.getElementById("proximo").classList.add("js-escondido");
 }
 
-// Editar pessoa
+// Acessa a página de edição de pessoa
 function editarPessoa(item) {
     editarTitulo("Editar pessoa - Star Wars");
 
@@ -204,8 +214,9 @@ dadosPessoas += '<div class="pessoas-editar shadow" id="pessoas-editar">' +
     document.getElementById("corCabelo").value = json.hair_color;
 }
 
+// Cancela e edição de pessoa e volta para a listagem
 function cancelarEditar() {
-    removeAll();
+    apagarTudo();
     
     document.getElementById("editar").classList.add("js-escondido");
     document.getElementById("lista").classList.remove("js-escondido");
@@ -213,6 +224,7 @@ function cancelarEditar() {
     listarPessoas();
 }
 
+// Altera os dados da pessoa
 function alterarPessoa(item){
     window.dados.results[item].name = document.getElementById("nomePessoa").value;
     window.dados.results[item].height = document.getElementById("altura").value;
@@ -224,11 +236,11 @@ function alterarPessoa(item){
 }
 
 // Remover pessoa
-function apagarPessoa(element)
-{
+function apagarPessoa(element) {
     element.parentElement.parentElement.parentElement.remove();
 }
 
+// Editar título da página
 function editarTitulo(titulo){
     document.getElementById("titulo").innerText = titulo;
 }
